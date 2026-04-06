@@ -19,7 +19,6 @@ body { background: #f5f7fa; color: #1a1a2e; padding: 20px; min-height: 100vh; }
 .fix-step { background: #fff; border: 1px solid #fed7aa; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 600; color: #ea580c; }
 .btn-retry { background: #f97316; color: #fff; border: none; border-radius: 8px; padding: 9px 22px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 12px; }
 .btn-retry:hover { opacity: 0.85; }
-.custom-input { background: #fff; border: 1px solid #fed7aa; border-radius: 6px; padding: 7px 12px; font-size: 12px; width: 100%; margin-top: 8px; font-family: monospace; }
 .status-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
 .status-chip { font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 600; }
 .chip-ok  { background: #f0fdf4; color: #22c55e; }
@@ -30,8 +29,6 @@ body { background: #f5f7fa; color: #1a1a2e; padding: 20px; min-height: 100vh; }
 .sheet-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .stab { padding: 6px 14px; border-radius: 20px; border: 2px solid #4f8ef7; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; background: #4f8ef7; color: #fff; }
 .stab.off { background: transparent; color: #4f8ef7; }
-.stab.all-tab { border-color: #22c55e; background: #22c55e; color: #fff; }
-.stab.all-tab.off { background: transparent; color: #22c55e; }
 .stab.failed { border-color: #ef4444 !important; background: #fef2f2 !important; color: #ef4444 !important; cursor: default; }
 
 .unit-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
@@ -77,7 +74,7 @@ canvas { max-height: 220px; }
 .thead { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .ttitle { font-size: 13px; font-weight: 600; color: #444; }
 .tscroll { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1400px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 1200px; }
 th { background: #f5f7fa; color: #666; padding: 9px 10px; text-align: left; border-bottom: 2px solid #e8eaf0; white-space: nowrap; font-weight: 600; }
 td { padding: 7px 10px; border-bottom: 1px solid #f0f2f8; color: #333; white-space: nowrap; }
 tr:hover td { background: #f9faff; }
@@ -89,6 +86,7 @@ tr:hover td { background: #f9faff; }
 .progress-bar { background: #e8eaf0; border-radius: 8px; height: 6px; margin: 8px 0; overflow: hidden; }
 .progress-fill { background: #4f8ef7; height: 100%; border-radius: 8px; transition: width 0.3s; }
 .afl { font-size: 11px; color: #f59e0b; margin-top: 10px; }
+.info-box { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-size: 12px; color: #1d4ed8; }
 @media(max-width:768px){.charts{grid-template-columns:1fr}.cbox.full{grid-column:1}}
 </style>
 </head>
@@ -97,47 +95,47 @@ tr:hover td { background: #f9faff; }
 <div class="header">
   <div>
     <div class="title">📊 VB Yarn — Historical Data Explorer</div>
-    <div class="subtitle">Unit 1 &amp; Unit 2 — Auto-loads all monthly sheets · New months reflect automatically</div>
+    <div class="subtitle">Unit 1 &amp; Unit 2 · Auto-discovers all monthly sheets · New months reflect automatically</div>
   </div>
   <span id="sync" style="font-size:12px;font-weight:600;color:#f59e0b">● Connecting...</span>
+</div>
+
+<div class="info-box" id="infoBox">
+  ℹ️ <strong>Auto-Discovery Mode:</strong> The dashboard automatically scans all known sheet tabs. 
+  To add a new month, just add its GID to the <code>ALL_SHEETS</code> list in the script. 
+  New data will reflect immediately on next load.
 </div>
 
 <!-- FIX BANNER -->
 <div class="fix-banner" id="fixBanner" style="display:none">
   <h3 id="bannerTitle">⚠️ Google Sheet is not publicly accessible — follow steps below</h3>
   <ol>
-    <li>Open your Google Sheet: <strong>VB YARN - DATA EXPLORER</strong></li>
+    <li>Open your Google Sheet: <strong>NODERED - VB</strong></li>
     <li>Click the <strong>Share</strong> button (top right corner)</li>
     <li>Click <strong>"Change to anyone with the link"</strong></li>
     <li>Set the role to <strong>Viewer</strong></li>
-    <li>Click <strong>Done</strong>, then come back here and click <strong>Retry</strong></li>
+    <li>Click <strong>Done</strong>, then click <strong>Retry</strong> below</li>
   </ol>
   <div class="steps-row">
     <div class="fix-step">① Open Sheet</div>
     <div class="fix-step">② Click Share</div>
     <div class="fix-step">③ Anyone with link</div>
     <div class="fix-step">④ Viewer</div>
-    <div class="fix-step">⑤ Retry below ↓</div>
+    <div class="fix-step">⑤ Retry ↓</div>
   </div>
   <br>
-  <label style="font-size:12px;font-weight:600;color:#7c2d12">
-    Optionally paste a different Sheet URL or ID if you want to try another sheet:
-  </label>
-  <input class="custom-input" type="text" id="customSheetInput"
-         placeholder="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/...">
-  <br>
-  <button class="btn-retry" onclick="retryWithCustom()">🔄 Retry / Load Data</button>
+  <button class="btn-retry" onclick="doFetch()">🔄 Retry / Load Data</button>
   <div class="status-row" id="chipRow"></div>
 </div>
 
 <!-- Sheet Tabs -->
-<div class="section-label">📅 Loaded Sheets (click to filter by month)</div>
+<div class="section-label">📅 Monthly Sheets (click to filter)</div>
 <div class="sheet-tabs" id="sheetTabs"></div>
 
 <!-- Unit Tabs -->
 <div class="unit-tabs">
-  <button class="utab utab-u1"      id="tabU1"   onclick="setUnit('U1')">■ Unit 1 Only</button>
-  <button class="utab utab-u2 off"  id="tabU2"   onclick="setUnit('U2')">■ Unit 2 Only</button>
+  <button class="utab utab-u1"       id="tabU1"   onclick="setUnit('U1')">■ Unit 1 Only</button>
+  <button class="utab utab-u2 off"   id="tabU2"   onclick="setUnit('U2')">■ Unit 2 Only</button>
   <button class="utab utab-both off" id="tabBoth" onclick="setUnit('BOTH')">■ Both Units</button>
 </div>
 
@@ -176,24 +174,24 @@ tr:hover td { background: #f9faff; }
       <select id="fcol">
         <option value="">None</option>
         <optgroup label="── Unit 1 ──">
-          <option value="U1-AUTOCONER FLOW - Flow">U1 Autoconer Flow</option>
-          <option value="U1-PREPARATORY FLOW - Flow">U1 Preparatory Flow</option>
-          <option value="U1-SPINNING FLOW - Flow">U1 Spinning Flow</option>
-          <option value="U1-SPG 1 TO 34 - Flow">U1 SPG 1 TO 34</option>
-          <option value="U1-AFTER DRYER PRESSURE - Pressure">U1 After Dryer Pressure</option>
-          <option value="U1-DEW POINT - Dew Point">U1 Dew Point</option>
-          <option value="U1-COMP 1 POWER - Power">U1 Comp 1 Power</option>
-          <option value="U1-COMP 2 POWER - Power">U1 Comp 2 Power</option>
+          <option value="U1_AUTOCONER_FLOW">U1 Autoconer Flow</option>
+          <option value="U1_PREPARATORY_FLOW">U1 Preparatory Flow</option>
+          <option value="U1_SPINNING_FLOW">U1 Spinning Flow</option>
+          <option value="U1_SPG_1_TO_34">U1 SPG 1 TO 34</option>
+          <option value="U1_AFTER_DRYER_PRESSURE">U1 After Dryer Pressure</option>
+          <option value="U1_DEW_POINT">U1 Dew Point</option>
+          <option value="U1_COMP1_POWER">U1 Comp 1 Power</option>
+          <option value="U1_COMP2_POWER">U1 Comp 2 Power</option>
         </optgroup>
         <optgroup label="── Unit 2 ──">
-          <option value="U2-AUTOCONER FLOW - Flow">U2 Autoconer Flow</option>
-          <option value="U2-BLOWROOM & CARDING - Flow">U2 Blowroom &amp; Carding</option>
-          <option value="U2-MAIN HEADER - Flow">U2 Main Header Flow</option>
-          <option value="U2-SPINNING - Flow">U2 Spinning Flow</option>
-          <option value="U2-PREPARATORY - Flow">U2 Preparatory Flow</option>
-          <option value="U2-AFTER DRYER PRESSURE - Pressure">U2 After Dryer Pressure</option>
-          <option value="U2-COMP POWER - Power">U2 Comp Power</option>
-          <option value="U2 - DEW POINT - Dew Point">U2 Dew Point</option>
+          <option value="U2_AUTOCONER_FLOW">U2 Autoconer Flow</option>
+          <option value="U2_BLOWROOM_CARDING">U2 Blowroom &amp; Carding</option>
+          <option value="U2_MAIN_HEADER">U2 Main Header Flow</option>
+          <option value="U2_SPINNING">U2 Spinning Flow</option>
+          <option value="U2_PREPARATORY">U2 Preparatory Flow</option>
+          <option value="U2_AFTER_DRYER_PRESSURE">U2 After Dryer Pressure</option>
+          <option value="U2_COMP_POWER">U2 Comp Power</option>
+          <option value="U2_DEW_POINT">U2 Dew Point</option>
         </optgroup>
       </select>
     </div>
@@ -226,11 +224,11 @@ tr:hover td { background: #f9faff; }
 
 <!-- Charts -->
 <div class="charts">
-  <div class="cbox full"><div class="ctitle" id="c1title">Flow Trends — Unit 1</div><canvas id="flowU1Chart"></canvas></div>
-  <div class="cbox full"><div class="ctitle" id="c2title">Flow Trends — Unit 2</div><canvas id="flowU2Chart"></canvas></div>
-  <div class="cbox"><div class="ctitle">Pressure (U1 &amp; U2 After Dryer)</div><canvas id="pressChart"></canvas></div>
-  <div class="cbox"><div class="ctitle">Dew Point (U1 &amp; U2)</div><canvas id="dewChart"></canvas></div>
-  <div class="cbox full"><div class="ctitle">Power Trends (U1 Comp 1 &amp; 2 / U2 Comp)</div><canvas id="powChart"></canvas></div>
+  <div class="cbox full" id="boxU1"><div class="ctitle">Flow Trends — Unit 1</div><canvas id="flowU1Chart"></canvas></div>
+  <div class="cbox full" id="boxU2"><div class="ctitle">Flow Trends — Unit 2</div><canvas id="flowU2Chart"></canvas></div>
+  <div class="cbox"><div class="ctitle">Pressure — U1 &amp; U2 After Dryer</div><canvas id="pressChart"></canvas></div>
+  <div class="cbox"><div class="ctitle">Dew Point — U1 &amp; U2</div><canvas id="dewChart"></canvas></div>
+  <div class="cbox full"><div class="ctitle">Power Trends — U1 Comp1 / U1 Comp2 / U2 Comp</div><canvas id="powChart"></canvas></div>
 </div>
 
 <!-- Table -->
@@ -240,507 +238,597 @@ tr:hover td { background: #f9faff; }
 </div>
 
 <script>
-// ══════════════════════════════════════════════════
-// ① SHEET CONFIG — Edit SHEET_ID and add new months here
-// ══════════════════════════════════════════════════
-var SHEET_ID = '1miP9BIjIxetwUsipAl2dfVzd6ctjYnotFcMUA8mvJlY';
+// ═══════════════════════════════════════════════════════════════
+// ① SHEET CONFIG
+//    SHEET_ID: the long ID from the Google Sheets URL
+//    ALL_SHEETS: one entry per tab/month.
+//      name  = friendly label shown in the UI
+//      gid   = the gid= number from the browser URL when on that tab
+//
+//    ➕ TO ADD A NEW MONTH:
+//       Open the new tab in Google Sheets.
+//       Copy the gid= number from the URL bar.
+//       Add a new line: { name:'JUNE 2025', gid:'PASTE_GID_HERE' }
+// ═══════════════════════════════════════════════════════════════
+var SHEET_ID = '1eVeFVQ5UOmj8KjhNkXM13X-v-wWscU7ky2-pgdBzDQ8';
 
-// To add a new month: open that tab in Google Sheets,
-// copy the gid= number from the browser URL, add a new line below.
 var ALL_SHEETS = [
-  { name:'ALL DATA',    gid:'1886307333' },
   { name:'JAN 2025',   gid:'0'          },
-  { name:'FEB 2025',   gid:'263719740'  },
-  { name:'MARCH 2025', gid:'1430023801' },
-  { name:'APRIL 2025', gid:'1746411500' },
-  { name:'MAY 2025',   gid:'1091207429' }
-  // ➕ ADD NEW MONTHS BELOW:
+  { name:'FEB 2025',   gid:'938774824'  },
+  { name:'MARCH 2025', gid:'32679886'   },
+  { name:'APRIL 2025', gid:'1024470993' },
+  { name:'MAY 2025',   gid:'261241410'  }
+  // ➕ ADD NEW MONTHS BELOW — copy gid from the tab URL:
   // { name:'JUNE 2025',  gid:'PASTE_GID_HERE' },
+  // { name:'JULY 2025',  gid:'PASTE_GID_HERE' },
 ];
 
-// ══════════════════════════════════════════════════
-// ② COLUMN NAMES — must match sheet headers exactly
-// ══════════════════════════════════════════════════
-var U1_COLS = [
-  'U1-AUTOCONER FLOW - Flow',
-  'U1-PREPARATORY FLOW - Flow',
-  'U1-SPINNING FLOW - Flow',
-  'U1-SPG 1 TO 34 - Flow',
-  'U1-AFTER DRYER PRESSURE - Pressure',
-  'U1-DEW POINT - Dew Point',
-  'U1-COMP 1 POWER - Power',
-  'U1-COMP 2 POWER - Power'
-];
-var U2_COLS = [
-  'U2-AUTOCONER FLOW - Flow',
-  'U2-BLOWROOM & CARDING - Flow',
-  'U2-MAIN HEADER - Flow',
-  'U2-SPINNING - Flow',
-  'U2-PREPARATORY - Flow',
-  'U2-AFTER DRYER PRESSURE - Pressure',
-  'U2-COMP POWER - Power',
-  'U2 - DEW POINT - Dew Point'
-];
-var ALL_COLS = U1_COLS.concat(U2_COLS);
-
-var PARAMS_CFG = [
-  {key:'U1-AUTOCONER FLOW - Flow',           label:'U1 Autoconer',     color:'#4f8ef7',unit:'U1'},
-  {key:'U1-PREPARATORY FLOW - Flow',          label:'U1 Preparatory',   color:'#3b82f6',unit:'U1'},
-  {key:'U1-SPINNING FLOW - Flow',             label:'U1 Spinning',      color:'#06b6d4',unit:'U1'},
-  {key:'U1-SPG 1 TO 34 - Flow',              label:'U1 SPG 1-34',      color:'#0ea5e9',unit:'U1'},
-  {key:'U1-AFTER DRYER PRESSURE - Pressure',  label:'U1 Dryer Pres',    color:'#6366f1',unit:'U1'},
-  {key:'U1-DEW POINT - Dew Point',            label:'U1 Dew Point',     color:'#22d3ee',unit:'U1'},
-  {key:'U1-COMP 1 POWER - Power',             label:'U1 Comp1 Pwr',     color:'#ef4444',unit:'U1'},
-  {key:'U1-COMP 2 POWER - Power',             label:'U1 Comp2 Pwr',     color:'#f97316',unit:'U1'},
-  {key:'U2-AUTOCONER FLOW - Flow',            label:'U2 Autoconer',     color:'#a855f7',unit:'U2'},
-  {key:'U2-BLOWROOM & CARDING - Flow',        label:'U2 Blowroom',      color:'#9333ea',unit:'U2'},
-  {key:'U2-MAIN HEADER - Flow',               label:'U2 Main Header',   color:'#7c3aed',unit:'U2'},
-  {key:'U2-SPINNING - Flow',                  label:'U2 Spinning',      color:'#c084fc',unit:'U2'},
-  {key:'U2-PREPARATORY - Flow',               label:'U2 Preparatory',   color:'#d946ef',unit:'U2'},
-  {key:'U2-AFTER DRYER PRESSURE - Pressure',  label:'U2 Dryer Pres',    color:'#10b981',unit:'U2'},
-  {key:'U2-COMP POWER - Power',               label:'U2 Comp Pwr',      color:'#ec4899',unit:'U2'},
-  {key:'U2 - DEW POINT - Dew Point',          label:'U2 Dew Point',     color:'#14b8a6',unit:'U2'}
+// ═══════════════════════════════════════════════════════════════
+// ② COLUMN LAYOUT
+//    The sheet uses a PAIRED layout:
+//      Row 1 = section header (e.g. "U1- AUTOCONER FLOW")
+//      Row 2 = sub-headers:  "Timestamp" | "Flow"
+//      Row 3+ = data
+//
+//    Column index pairs (0-based) for each sensor.
+//    Verify against your screenshot if columns shift.
+//    Each entry: { key, label, tsCol, valCol, unit, group }
+//      tsCol / valCol = 0-based column index in the CSV
+// ═══════════════════════════════════════════════════════════════
+var SENSOR_DEFS = [
+  // Unit 1
+  { key:'U1_AUTOCONER_FLOW',      label:'U1 Autoconer Flow',    tsCol:0,  valCol:1,  unit:'CFM', group:'U1', color:'#4f8ef7' },
+  { key:'U1_PREPARATORY_FLOW',    label:'U1 Preparatory Flow',  tsCol:2,  valCol:3,  unit:'CFM', group:'U1', color:'#3b82f6' },
+  { key:'U1_SPG_1_TO_34',         label:'U1 SPG 1-34 Flow',     tsCol:4,  valCol:5,  unit:'CFM', group:'U1', color:'#0ea5e9' },
+  { key:'U1_SPINNING_FLOW',       label:'U1 Spinning Flow',     tsCol:6,  valCol:7,  unit:'CFM', group:'U1', color:'#06b6d4' },
+  { key:'U1_AFTER_DRYER_PRESSURE',label:'U1 After Dryer Pres',  tsCol:8,  valCol:9,  unit:'bar', group:'U1', color:'#6366f1' },
+  { key:'U1_DEW_POINT',           label:'U1 Dew Point',         tsCol:10, valCol:11, unit:'°C',  group:'U1', color:'#22d3ee' },
+  { key:'U1_COMP1_POWER',         label:'U1 Comp1 Power',       tsCol:12, valCol:13, unit:'kW',  group:'U1', color:'#ef4444' },
+  { key:'U1_COMP2_POWER',         label:'U1 Comp2 Power',       tsCol:14, valCol:15, unit:'kW',  group:'U1', color:'#f97316' },
+  // Unit 2
+  { key:'U2_AUTOCONER_FLOW',      label:'U2 Autoconer Flow',    tsCol:16, valCol:17, unit:'CFM', group:'U2', color:'#a855f7' },
+  { key:'U2_BLOWROOM_CARDING',    label:'U2 Blowroom & Carding',tsCol:18, valCol:19, unit:'CFM', group:'U2', color:'#9333ea' },
+  { key:'U2_MAIN_HEADER',         label:'U2 Main Header Flow',  tsCol:20, valCol:21, unit:'CFM', group:'U2', color:'#7c3aed' },
+  { key:'U2_PREPARATORY',         label:'U2 Preparatory Flow',  tsCol:22, valCol:23, unit:'CFM', group:'U2', color:'#d946ef' },
+  { key:'U2_SPINNING',            label:'U2 Spinning Flow',     tsCol:24, valCol:25, unit:'CFM', group:'U2', color:'#c084fc' },
+  { key:'U2_AFTER_DRYER_PRESSURE',label:'U2 After Dryer Pres',  tsCol:26, valCol:27, unit:'bar', group:'U2', color:'#10b981' },
+  { key:'U2_COMP_POWER',          label:'U2 Comp Power',        tsCol:28, valCol:29, unit:'kW',  group:'U2', color:'#ec4899' },
+  { key:'U2_DEW_POINT',           label:'U2 Dew Point',         tsCol:30, valCol:31, unit:'°C',  group:'U2', color:'#14b8a6' }
 ];
 
-// ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // STATE
-// ══════════════════════════════════════════════════
-var activeParams={};
-PARAMS_CFG.forEach(function(p){activeParams[p.key]=true;});
-var activeSheets={};
-ALL_SHEETS.forEach(function(s){activeSheets[s.name]=(s.name==='ALL DATA');});
-var sheetStat={};
-var currentUnit='U1';
-var allData=[],filteredData=[];
-var flowU1Chart,flowU2Chart,pressChart,dewChart,powChart;
+// ═══════════════════════════════════════════════════════════════
+var activeParams = {};
+SENSOR_DEFS.forEach(function(s){ activeParams[s.key] = true; });
+var activeSheets = {};
+ALL_SHEETS.forEach(function(s){ activeSheets[s.name] = true; }); // all ON by default
+var sheetStat = {};
+var currentUnit = 'U1';
+var allData = [], filteredData = [];
+var flowU1Chart, flowU2Chart, pressChart, dewChart, powChart;
 
-// ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // PARSERS
-// ══════════════════════════════════════════════════
-function parseTimestamp(str){
-  if(!str||!str.trim()) return null;
-  str=str.trim();
-  var m=str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if(m) return new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5],+(m[6]||0));
-  var m2=str.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?/);
-  if(m2) return new Date(+m2[1],+m2[2]-1,+m2[3],+m2[4],+m2[5],+(m2[6]||0));
-  var m3=str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if(m3) return new Date(+m3[3],+m3[2]-1,+m3[1]);
-  var MO={JAN:0,FEB:1,MARCH:2,MAR:2,APRIL:3,APR:3,MAY:4,JUNE:5,JUN:5,JULY:6,JUL:6,AUG:7,SEP:8,OCT:9,NOV:10,DEC:11};
-  var m4=str.match(/^([A-Z]+)\s+(\d{4})$/i);
-  if(m4){var mo=MO[(m4[1]||'').toUpperCase()];if(mo!==undefined)return new Date(+m4[2],mo,1);}
-  var d=new Date(str); return isNaN(d)?null:d;
+// ═══════════════════════════════════════════════════════════════
+function parseTimestamp(str) {
+  if (!str || !str.trim()) return null;
+  str = str.trim();
+  // DD-MM-YYYY HH:MM or DD/MM/YYYY HH:MM
+  var m = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5], +(m[6]||0));
+  // YYYY-MM-DD
+  var m2 = str.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (m2) return new Date(+m2[1], +m2[2]-1, +m2[3], +m2[4], +m2[5], +(m2[6]||0));
+  // DD-MM-YYYY only
+  var m3 = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if (m3) return new Date(+m3[3], +m3[2]-1, +m3[1]);
+  var d = new Date(str); return isNaN(d) ? null : d;
 }
 
-function parseCSV(csv,src){
-  var lines=csv.replace(/\r/g,'').split('\n').filter(function(l){return l.trim();});
-  if(lines.length<2) return [];
-  function split(line){
-    var res=[],cur='',inQ=false;
-    for(var i=0;i<line.length;i++){var ch=line[i];if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){res.push(cur);cur='';}else{cur+=ch;}}
-    res.push(cur);return res.map(function(v){return v.replace(/^"|"$/g,'').trim();});
+function splitCSVLine(line) {
+  var res = [], cur = '', inQ = false;
+  for (var i = 0; i < line.length; i++) {
+    var ch = line[i];
+    if (ch === '"') { inQ = !inQ; }
+    else if (ch === ',' && !inQ) { res.push(cur); cur = ''; }
+    else { cur += ch; }
   }
-  var hdrs=split(lines[0]),rows=[];
-  for(var i=1;i<lines.length;i++){
-    var cells=split(lines[i]);if(!cells[0]||!cells[0].trim()) continue;
-    var obj={_source:src};
-    hdrs.forEach(function(h,idx){obj[h]=cells[idx]!==undefined?cells[idx]:'';});
-    obj['Timestamp']=parseTimestamp(obj['Timestamp']||obj[hdrs[0]]||'');
-    obj['_month']=obj['Month']||src;
+  res.push(cur);
+  return res.map(function(v){ return v.replace(/^"|"$/g,'').trim(); });
+}
+
+// Parse the paired-column CSV format used in these sheets.
+// Row 1 = section headers (merged cells export as value in first col, rest empty)
+// Row 2 = "Timestamp", "Flow"/"Pressure"/etc sub-headers
+// Row 3+ = data
+function parseSheetCSV(csv, sheetName) {
+  var lines = csv.replace(/\r/g,'').split('\n').filter(function(l){ return l.trim(); });
+  if (lines.length < 3) return [];
+
+  var rows = [];
+  // skip rows 0 (section headers) and 1 (sub-headers) — start from row index 2
+  for (var i = 2; i < lines.length; i++) {
+    var cells = splitCSVLine(lines[i]);
+    if (!cells || !cells[0] || !cells[0].trim()) continue;
+
+    // Primary timestamp comes from the first sensor's timestamp column (col 0)
+    var primaryTs = parseTimestamp(cells[0]);
+    if (!primaryTs) continue;
+
+    var obj = { _source: sheetName, _ts: primaryTs };
+
+    // Extract each sensor value using its defined column index
+    SENSOR_DEFS.forEach(function(sd) {
+      var rawVal = cells[sd.valCol] !== undefined ? cells[sd.valCol] : '';
+      var n = parseFloat(rawVal);
+      obj[sd.key] = isNaN(n) ? null : n;
+    });
+
     rows.push(obj);
   }
   return rows;
 }
 
-// ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // FETCH
-// ══════════════════════════════════════════════════
-function fetchSheet(sheet){
-  var url='https://docs.google.com/spreadsheets/d/'+SHEET_ID+
-          '/export?format=csv&gid='+sheet.gid+'&t='+Date.now();
-  return fetch(url,{cache:'no-store'})
-    .then(function(r){
-      if(!r.ok) throw new Error('HTTP '+r.status);
+// ═══════════════════════════════════════════════════════════════
+function fetchSheet(sheet) {
+  var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
+            '/export?format=csv&gid=' + sheet.gid + '&t=' + Date.now();
+  return fetch(url, { cache: 'no-store' })
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.text();
     })
-    .then(function(csv){
-      if(csv.trim().startsWith('<')){throw new Error('PERMISSION_DENIED');}
-      var rows=parseCSV(csv,sheet.name);
-      sheetStat[sheet.name]=rows.length>0?'ok':'empty';
+    .then(function(csv) {
+      if (csv.trim().startsWith('<')) throw new Error('PERMISSION_DENIED');
+      var rows = parseSheetCSV(csv, sheet.name);
+      sheetStat[sheet.name] = rows.length > 0 ? 'ok' : 'empty';
       return rows;
     })
-    .catch(function(err){
-      sheetStat[sheet.name]='fail:'+err.message;
-      console.warn('['+sheet.name+']',err.message);
+    .catch(function(err) {
+      sheetStat[sheet.name] = 'fail:' + err.message;
+      console.warn('[' + sheet.name + ']', err.message);
       return [];
     });
 }
 
-function doFetch(){
-  document.getElementById('sync').textContent='● Fetching...';
-  document.getElementById('sync').style.color='#f59e0b';
-  document.getElementById('fixBanner').style.display='none';
-  document.getElementById('table').innerHTML=
-    '<div class="loading">⏳ Connecting to Google Sheets…<br>'+
-    '<div style="font-size:11px;color:#aaa;margin-top:10px" id="progLabel">Starting…</div>'+
+function doFetch() {
+  document.getElementById('sync').textContent = '● Fetching...';
+  document.getElementById('sync').style.color = '#f59e0b';
+  document.getElementById('fixBanner').style.display = 'none';
+  document.getElementById('table').innerHTML =
+    '<div class="loading">⏳ Connecting to Google Sheets…<br>' +
+    '<div style="font-size:11px;color:#aaa;margin-top:10px" id="progLabel">Starting…</div>' +
     '<div class="progress-bar"><div class="progress-fill" id="progFill" style="width:0%"></div></div></div>';
 
-  allData=[];sheetStat={};
-  var total=ALL_SHEETS.length,done=0;
-  var promises=ALL_SHEETS.map(function(s){
-    return fetchSheet(s).then(function(rows){
+  allData = []; sheetStat = {};
+  var total = ALL_SHEETS.length, done = 0;
+
+  var promises = ALL_SHEETS.map(function(s) {
+    return fetchSheet(s).then(function(rows) {
       done++;
-      var lbl=document.getElementById('progLabel'),fill=document.getElementById('progFill');
-      if(lbl) lbl.textContent='Loaded: '+s.name+' ('+rows.length+' rows)';
-      if(fill) fill.style.width=Math.round(done/total*100)+'%';
-      return{name:s.name,rows:rows};
+      var lbl = document.getElementById('progLabel'), fill = document.getElementById('progFill');
+      if (lbl) lbl.textContent = 'Loaded: ' + s.name + ' (' + rows.length + ' rows)';
+      if (fill) fill.style.width = Math.round(done/total*100) + '%';
+      return { name: s.name, rows: rows };
     });
   });
 
-  Promise.all(promises).then(function(results){
-    // Use ALL DATA as master; fallback: merge monthly
-    var master=[];
-    results.forEach(function(r){if(r.name==='ALL DATA') master=r.rows;});
-    if(master.length>0){
-      allData=master;
-    } else {
-      var seen={};
-      results.forEach(function(r){
-        if(r.name==='ALL DATA') return;
-        r.rows.forEach(function(row){
-          var ts=getTS(row),k=ts?ts.getTime():Math.random()+'';
-          if(!seen[k]){seen[k]=true;allData.push(row);}
-        });
+  Promise.all(promises).then(function(results) {
+    // Merge all months, dedup by timestamp+source
+    var seen = {};
+    results.forEach(function(r) {
+      r.rows.forEach(function(row) {
+        var k = row._source + '_' + (row._ts ? row._ts.getTime() : Math.random());
+        if (!seen[k]) { seen[k] = true; allData.push(row); }
       });
-    }
-    allData.sort(function(a,b){return(getTS(a)||0)-(getTS(b)||0);});
+    });
+    allData.sort(function(a,b){ return (a._ts||0) - (b._ts||0); });
 
-    var fails=Object.keys(sheetStat).filter(function(k){return sheetStat[k].startsWith('fail');});
-    var oks  =Object.keys(sheetStat).filter(function(k){return sheetStat[k]==='ok';});
+    var fails = Object.keys(sheetStat).filter(function(k){ return sheetStat[k].startsWith('fail'); });
+    var oks   = Object.keys(sheetStat).filter(function(k){ return sheetStat[k] === 'ok'; });
 
-    if(allData.length===0){
-      // Nothing loaded
-      document.getElementById('fixBanner').style.display='block';
-      document.getElementById('bannerTitle').textContent=
-        '⚠️ Could not load any data — '+fails.length+' sheet(s) failed. Follow steps below:';
+    if (allData.length === 0) {
+      document.getElementById('fixBanner').style.display = 'block';
+      document.getElementById('bannerTitle').textContent =
+        '⚠️ Could not load any data — ' + fails.length + ' sheet(s) failed. Follow steps below:';
       renderChips();
-      document.getElementById('sync').textContent='● Failed — no data loaded';
-      document.getElementById('sync').style.color='#ef4444';
-      document.getElementById('table').innerHTML=
+      document.getElementById('sync').textContent = '● Failed — no data loaded';
+      document.getElementById('sync').style.color = '#ef4444';
+      document.getElementById('table').innerHTML =
         '<div class="loading" style="color:#ef4444">❌ No data. Please make your Google Sheet public (see orange banner above).</div>';
     } else {
-      document.getElementById('sync').textContent=
-        '● Synced ('+allData.length+' rows, '+oks.length+'/'+total+' sheets OK)';
-      document.getElementById('sync').style.color=fails.length===0?'#22c55e':'#f59e0b';
-      if(fails.length>0){
-        document.getElementById('fixBanner').style.display='block';
-        document.getElementById('bannerTitle').textContent=
-          '⚠️ '+fails.length+' sheet(s) could not load (shown red below). '+
-          'Data shown is partial. Make sure ALL sheets in the workbook are public.';
+      document.getElementById('sync').textContent =
+        '● Synced (' + allData.length + ' rows · ' + oks.length + '/' + total + ' sheets OK)';
+      document.getElementById('sync').style.color = fails.length === 0 ? '#22c55e' : '#f59e0b';
+      if (fails.length > 0) {
+        document.getElementById('fixBanner').style.display = 'block';
+        document.getElementById('bannerTitle').textContent =
+          '⚠️ ' + fails.length + ' sheet(s) could not load (shown red below). Data is partial.';
         renderChips();
       }
     }
-    buildSheetTabs();buildCards();buildParamButtons();applyFilters();
+    buildSheetTabs(); buildCards(); buildParamButtons(); applyFilters();
   });
 }
 
-function renderChips(){
-  var div=document.getElementById('chipRow');
-  div.innerHTML=ALL_SHEETS.map(function(s){
-    var st=sheetStat[s.name]||'pending';
-    var ok=st==='ok',fail=st.startsWith('fail'),empty=st==='empty';
-    return'<span class="status-chip '+(ok?'chip-ok':fail?'chip-err':'chip-empty')+'">'+
-      (ok?'✓ ':fail?'✗ ':'~ ')+s.name+'</span>';
+function renderChips() {
+  var div = document.getElementById('chipRow');
+  div.innerHTML = ALL_SHEETS.map(function(s) {
+    var st = sheetStat[s.name] || 'pending';
+    var ok = st === 'ok', fail = st.startsWith('fail'), empty = st === 'empty';
+    return '<span class="status-chip ' + (ok?'chip-ok':fail?'chip-err':'chip-empty') + '">' +
+      (ok?'✓ ':fail?'✗ ':'~ ') + s.name + '</span>';
   }).join('');
 }
 
-function retryWithCustom(){
-  var raw=(document.getElementById('customSheetInput').value||'').trim();
-  if(raw){
-    var m=raw.match(/\/d\/([a-zA-Z0-9_-]+)/);
-    if(m) SHEET_ID=m[1];
-    else if(/^[a-zA-Z0-9_-]{20,}$/.test(raw)) SHEET_ID=raw;
-  }
-  doFetch();
-}
-
-// ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // HELPERS
-// ══════════════════════════════════════════════════
-function fmtTS(ts){
-  if(!ts) return '—';
-  var d=(ts instanceof Date)?ts:new Date(ts);
-  if(isNaN(d)) return String(ts);
-  return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0')+'-'+
-         d.getDate().toString().padStart(2,'0')+' '+
-         d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+// ═══════════════════════════════════════════════════════════════
+function fmtTS(ts) {
+  if (!ts) return '—';
+  var d = (ts instanceof Date) ? ts : new Date(ts);
+  if (isNaN(d)) return String(ts);
+  return d.getFullYear() + '-' + (d.getMonth()+1).toString().padStart(2,'0') + '-' +
+         d.getDate().toString().padStart(2,'0') + ' ' +
+         d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
 }
-function getTS(row){
-  var ts=row['Timestamp'];
-  if(!ts) return null;
-  if(ts instanceof Date) return isNaN(ts)?null:ts;
-  return parseTimestamp(String(ts));
-}
-function num(v){var n=parseFloat(v);return isNaN(n)?null:n;}
-function badgeClass(s){
-  s=(s||'').toUpperCase();
-  if(s.includes('JAN')) return 'badge-jan';if(s.includes('FEB')) return 'badge-feb';
-  if(s.includes('MAR')) return 'badge-mar';if(s.includes('APR')) return 'badge-apr';
-  if(s.includes('MAY')) return 'badge-may';return 'badge-def';
+function num(v) { var n = parseFloat(v); return isNaN(n) ? null : n; }
+function badgeClass(s) {
+  s = (s||'').toUpperCase();
+  if (s.includes('JAN')) return 'badge-jan'; if (s.includes('FEB')) return 'badge-feb';
+  if (s.includes('MAR')) return 'badge-mar'; if (s.includes('APR')) return 'badge-apr';
+  if (s.includes('MAY')) return 'badge-may'; return 'badge-def';
 }
 
-// ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // UI BUILDERS
-// ══════════════════════════════════════════════════
-function buildSheetTabs(){
-  var div=document.getElementById('sheetTabs');div.innerHTML='';
-  ALL_SHEETS.forEach(function(s){
-    var btn=document.createElement('button');
-    var failed=(sheetStat[s.name]||'').startsWith('fail');
-    btn.className='stab'+(s.name==='ALL DATA'?' all-tab':'')+(activeSheets[s.name]?'':' off')+(failed?' failed':'');
-    btn.textContent=s.name+(failed?' ✗':'');
-    btn.title=failed?'This sheet could not be loaded — ensure it is public':s.name;
-    if(!failed) btn.onclick=function(){activeSheets[s.name]=!activeSheets[s.name];btn.classList.toggle('off');applyFilters();};
+// ═══════════════════════════════════════════════════════════════
+function buildSheetTabs() {
+  var div = document.getElementById('sheetTabs'); div.innerHTML = '';
+  ALL_SHEETS.forEach(function(s) {
+    var btn = document.createElement('button');
+    var failed = (sheetStat[s.name]||'').startsWith('fail');
+    btn.className = 'stab' + (activeSheets[s.name] ? '' : ' off') + (failed ? ' failed' : '');
+    btn.textContent = s.name + (failed ? ' ✗' : '');
+    btn.title = failed ? 'Sheet could not load — ensure it is shared publicly' : s.name;
+    if (!failed) btn.onclick = (function(name, b){
+      return function(){
+        activeSheets[name] = !activeSheets[name];
+        b.classList.toggle('off');
+        applyFilters();
+      };
+    })(s.name, btn);
     div.appendChild(btn);
   });
 }
 
-function setUnit(u){
-  currentUnit=u;
-  ['U1','U2','BOTH'].forEach(function(x){var el=document.getElementById('tab'+x);if(el)el.classList.toggle('off',x!==u);});
-  document.getElementById('cardsLabel').textContent=
-    u==='BOTH'?'📈 Unit 1 & Unit 2 — Key Averages':u==='U1'?'📈 Unit 1 — Key Averages':'📈 Unit 2 — Key Averages';
-  buildCards();filterParamButtons();renderAll(aggregate(filteredData));
+function setUnit(u) {
+  currentUnit = u;
+  ['U1','U2','BOTH'].forEach(function(x){
+    var el = document.getElementById('tab' + x); if (el) el.classList.toggle('off', x !== u);
+  });
+  document.getElementById('cardsLabel').textContent =
+    u === 'BOTH' ? '📈 Unit 1 & Unit 2 — Key Averages' :
+    u === 'U1'   ? '📈 Unit 1 — Key Averages' : '📈 Unit 2 — Key Averages';
+  buildCards(); filterParamButtons(); renderAll(aggregate(filteredData));
 }
 
-function buildParamButtons(){
-  var div=document.getElementById('params');div.innerHTML='';
-  PARAMS_CFG.forEach(function(p){
-    var btn=document.createElement('button');
-    btn.className='pbtn';btn.textContent=p.label;btn.dataset.unit=p.unit;
-    btn.style.cssText='border-color:'+p.color+';background:'+p.color+';color:#fff';
-    btn.onclick=function(){
-      activeParams[p.key]=!activeParams[p.key];
-      btn.style.background=activeParams[p.key]?p.color:'transparent';
-      btn.style.color=activeParams[p.key]?'#fff':p.color;
-      renderAll(aggregate(filteredData));
-    };
+function buildParamButtons() {
+  var div = document.getElementById('params'); div.innerHTML = '';
+  SENSOR_DEFS.forEach(function(p) {
+    var btn = document.createElement('button');
+    btn.className = 'pbtn'; btn.textContent = p.label; btn.dataset.unit = p.group;
+    btn.style.cssText = 'border-color:' + p.color + ';background:' + p.color + ';color:#fff';
+    btn.onclick = (function(key, color, b){
+      return function(){
+        activeParams[key] = !activeParams[key];
+        b.style.background = activeParams[key] ? color : 'transparent';
+        b.style.color = activeParams[key] ? '#fff' : color;
+        renderAll(aggregate(filteredData));
+      };
+    })(p.key, p.color, btn);
     div.appendChild(btn);
   });
   filterParamButtons();
 }
-function filterParamButtons(){
+function filterParamButtons() {
   document.querySelectorAll('.pbtn').forEach(function(btn){
-    btn.style.display=(currentUnit==='BOTH'||currentUnit===btn.dataset.unit)?'':'none';
+    btn.style.display = (currentUnit === 'BOTH' || currentUnit === btn.dataset.unit) ? '' : 'none';
   });
 }
 
-function buildCards(){
-  var div=document.getElementById('cards');div.innerHTML='';
-  var defs=[];
-  if(currentUnit==='U1'||currentUnit==='BOTH') defs=defs.concat([
-    {id:'u1auto',col:'U1-AUTOCONER FLOW - Flow',           label:'U1 Autoconer Flow',   unit:'CFM',cls:'u1'},
-    {id:'u1spin',col:'U1-SPINNING FLOW - Flow',             label:'U1 Spinning Flow',    unit:'CFM',cls:'u1'},
-    {id:'u1prep',col:'U1-PREPARATORY FLOW - Flow',          label:'U1 Preparatory Flow', unit:'CFM',cls:'u1'},
-    {id:'u1spg', col:'U1-SPG 1 TO 34 - Flow',              label:'U1 SPG 1-34 Flow',    unit:'CFM',cls:'u1'},
-    {id:'u1pre', col:'U1-AFTER DRYER PRESSURE - Pressure',  label:'U1 Dryer Pressure',   unit:'bar',cls:'u1'},
-    {id:'u1dew', col:'U1-DEW POINT - Dew Point',            label:'U1 Dew Point',        unit:'°C', cls:'u1'},
-  ]);
-  if(currentUnit==='U2'||currentUnit==='BOTH') defs=defs.concat([
-    {id:'u2main',col:'U2-MAIN HEADER - Flow',               label:'U2 Main Header Flow', unit:'CFM',cls:'u2'},
-    {id:'u2auto',col:'U2-AUTOCONER FLOW - Flow',            label:'U2 Autoconer Flow',   unit:'CFM',cls:'u2'},
-    {id:'u2spin',col:'U2-SPINNING - Flow',                  label:'U2 Spinning Flow',    unit:'CFM',cls:'u2'},
-    {id:'u2blow',col:'U2-BLOWROOM & CARDING - Flow',        label:'U2 Blowroom Flow',    unit:'CFM',cls:'u2'},
-    {id:'u2pre', col:'U2-AFTER DRYER PRESSURE - Pressure',  label:'U2 Dryer Pressure',   unit:'bar',cls:'u2'},
-    {id:'u2dew', col:'U2 - DEW POINT - Dew Point',          label:'U2 Dew Point',        unit:'°C', cls:'u2'},
-  ]);
+function buildCards() {
+  var div = document.getElementById('cards'); div.innerHTML = '';
+  var defs = [];
+  if (currentUnit === 'U1' || currentUnit === 'BOTH') {
+    defs = defs.concat([
+      { key:'U1_AUTOCONER_FLOW',       label:'U1 Autoconer Flow',   unit:'CFM', cls:'u1' },
+      { key:'U1_SPINNING_FLOW',        label:'U1 Spinning Flow',    unit:'CFM', cls:'u1' },
+      { key:'U1_PREPARATORY_FLOW',     label:'U1 Preparatory Flow', unit:'CFM', cls:'u1' },
+      { key:'U1_SPG_1_TO_34',          label:'U1 SPG 1-34 Flow',    unit:'CFM', cls:'u1' },
+      { key:'U1_AFTER_DRYER_PRESSURE', label:'U1 Dryer Pressure',   unit:'bar', cls:'u1' },
+      { key:'U1_DEW_POINT',            label:'U1 Dew Point',        unit:'°C',  cls:'u1' },
+    ]);
+  }
+  if (currentUnit === 'U2' || currentUnit === 'BOTH') {
+    defs = defs.concat([
+      { key:'U2_MAIN_HEADER',          label:'U2 Main Header Flow', unit:'CFM', cls:'u2' },
+      { key:'U2_AUTOCONER_FLOW',       label:'U2 Autoconer Flow',   unit:'CFM', cls:'u2' },
+      { key:'U2_SPINNING',             label:'U2 Spinning Flow',    unit:'CFM', cls:'u2' },
+      { key:'U2_BLOWROOM_CARDING',     label:'U2 Blowroom Flow',    unit:'CFM', cls:'u2' },
+      { key:'U2_AFTER_DRYER_PRESSURE', label:'U2 Dryer Pressure',   unit:'bar', cls:'u2' },
+      { key:'U2_DEW_POINT',            label:'U2 Dew Point',        unit:'°C',  cls:'u2' },
+    ]);
+  }
   defs.forEach(function(d){
-    var c=document.createElement('div');c.className='card '+d.cls;
-    c.innerHTML='<div class="lbl">'+d.label+'</div><div class="val" id="cv_'+d.id+'">—</div><div class="rng" id="cr_'+d.id+'"></div>';
+    var c = document.createElement('div'); c.className = 'card ' + d.cls;
+    c.innerHTML = '<div class="lbl">' + d.label + '</div>' +
+                  '<div class="val" id="cv_' + d.key + '">—</div>' +
+                  '<div class="rng" id="cr_' + d.key + '"></div>';
     div.appendChild(c);
   });
-  window._cardDefs=defs;
+  window._cardDefs = defs;
 }
-function updateCards(data){
-  if(!window._cardDefs) return;
+
+function updateCards(data) {
+  if (!window._cardDefs) return;
   window._cardDefs.forEach(function(d){
-    var vals=data.map(function(r){return num(r[d.col]);}).filter(function(v){return v!==null;});
-    var av=document.getElementById('cv_'+d.id),rg=document.getElementById('cr_'+d.id);
-    if(!av) return;
-    if(!vals.length){av.textContent='—';rg.textContent='';return;}
-    av.textContent=(vals.reduce(function(a,b){return a+b;},0)/vals.length).toFixed(2)+' '+d.unit;
-    rg.textContent='Range: '+Math.min.apply(null,vals).toFixed(2)+' — '+Math.max.apply(null,vals).toFixed(2);
+    var vals = data.map(function(r){ return num(r[d.key]); }).filter(function(v){ return v !== null; });
+    var av = document.getElementById('cv_' + d.key), rg = document.getElementById('cr_' + d.key);
+    if (!av) return;
+    if (!vals.length) { av.textContent = '—'; rg.textContent = ''; return; }
+    var avg = vals.reduce(function(a,b){ return a+b; }, 0) / vals.length;
+    av.textContent = avg.toFixed(2) + ' ' + d.unit;
+    rg.textContent = 'Range: ' + Math.min.apply(null,vals).toFixed(2) + ' — ' + Math.max.apply(null,vals).toFixed(2);
   });
 }
 
-// ══════════════════════════════════════════════════
-// FILTER
-// ══════════════════════════════════════════════════
-function applyFilters(){
-  var from=document.getElementById('from').value,to=document.getElementById('to').value;
-  var col=document.getElementById('fcol').value,op=document.getElementById('fop').value;
-  var val=parseFloat(document.getElementById('fval').value);
-  var actNames=Object.keys(activeSheets).filter(function(k){return activeSheets[k];});
-  var onlyAll=actNames.length===1&&actNames[0]==='ALL DATA';
+// ═══════════════════════════════════════════════════════════════
+// FILTER & AGGREGATION
+// ═══════════════════════════════════════════════════════════════
+function applyFilters() {
+  var from = document.getElementById('from').value;
+  var to   = document.getElementById('to').value;
+  var col  = document.getElementById('fcol').value;
+  var op   = document.getElementById('fop').value;
+  var val  = parseFloat(document.getElementById('fval').value);
 
-  filteredData=allData.filter(function(row){
-    if(!onlyAll&&actNames.length>0){
-      var src=(row._source||'').toUpperCase(),mo=(row['Month']||'').toString().trim().toUpperCase();
-      var match=actNames.some(function(n){
-        var nu=n.toUpperCase();
-        return src===nu||src.includes(nu)||(mo.length>2&&(nu.includes(mo)||mo.includes(nu)));
-      });
-      if(!match) return false;
+  var actNames = Object.keys(activeSheets).filter(function(k){ return activeSheets[k]; });
+
+  filteredData = allData.filter(function(row){
+    // Sheet filter
+    if (actNames.length > 0 && !actNames.includes(row._source)) return false;
+    // Date filter
+    if (from || to) {
+      var ts = row._ts; if (!ts) return false;
+      if (from && ts < new Date(from))           return false;
+      if (to   && ts > new Date(to + 'T23:59:59')) return false;
     }
-    if(from||to){var ts=getTS(row);if(!ts||isNaN(ts))return false;if(from&&ts<new Date(from))return false;if(to&&ts>new Date(to+'T23:59:59'))return false;}
-    if(col&&!isNaN(val)){var rv=num(row[col]);if(rv===null)return false;
-      if(op==='gt'&&rv<=val)return false;if(op==='lt'&&rv>=val)return false;
-      if(op==='gte'&&rv<val)return false;if(op==='lte'&&rv>val)return false;if(op==='eq'&&rv!==val)return false;}
+    // Column filter
+    if (col && !isNaN(val)) {
+      var rv = num(row[col]); if (rv === null) return false;
+      if (op==='gt'  && rv <= val) return false;
+      if (op==='lt'  && rv >= val) return false;
+      if (op==='gte' && rv <  val) return false;
+      if (op==='lte' && rv >  val) return false;
+      if (op==='eq'  && rv !== val) return false;
+    }
     return true;
   });
-  updateActiveLabel();var d=aggregate(filteredData);updateCards(d);renderAll(d);renderTable(d);
-}
-function updateActiveLabel(){
-  var parts=[],from=document.getElementById('from').value,to=document.getElementById('to').value;
-  if(from||to) parts.push('Date: '+(from||'...')+' → '+(to||'...'));
-  var col=document.getElementById('fcol').value,val=document.getElementById('fval').value;
-  var opL={gt:'>',lt:'<',gte:'>=',lte:'<=',eq:'='};
-  if(col&&val) parts.push(col+' '+opL[document.getElementById('fop').value]+' '+val);
-  document.getElementById('afl').textContent=parts.length?'🔍 '+parts.join(' | '):'';
-}
-function applyQuickRange(){
-  var v=document.getElementById('qr').value;
-  if(!v||v==='all'){document.getElementById('from').value='';document.getElementById('to').value='';if(allData.length)applyFilters();return;}
-  var to=new Date(),fr=new Date();fr.setDate(fr.getDate()-parseInt(v));
-  document.getElementById('to').value=to.toISOString().split('T')[0];
-  document.getElementById('from').value=fr.toISOString().split('T')[0];
-  if(allData.length)applyFilters();
-}
-function doReset(){
-  ['qr','fcol','fval','from','to'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('qr').value='all';document.getElementById('agg').value='monthly';
-  document.getElementById('afl').textContent='';
-  ALL_SHEETS.forEach(function(s){activeSheets[s.name]=(s.name==='ALL DATA');});
-  buildSheetTabs();applyFilters();
+
+  updateActiveLabel();
+  var d = aggregate(filteredData);
+  updateCards(d); renderAll(d); renderTable(d);
 }
 
-// ══════════════════════════════════════════════════
-// AGGREGATION
-// ══════════════════════════════════════════════════
-function aggregate(data){
-  var agg=document.getElementById('agg').value;if(agg==='raw') return data;
-  var groups={};
+function updateActiveLabel() {
+  var parts = [];
+  var from = document.getElementById('from').value, to = document.getElementById('to').value;
+  if (from || to) parts.push('Date: ' + (from||'...') + ' → ' + (to||'...'));
+  var col = document.getElementById('fcol').value, val = document.getElementById('fval').value;
+  var opL = { gt:'>',lt:'<',gte:'>=',lte:'<=',eq:'=' };
+  if (col && val) parts.push(col + ' ' + opL[document.getElementById('fop').value] + ' ' + val);
+  document.getElementById('afl').textContent = parts.length ? '🔍 ' + parts.join(' | ') : '';
+}
+
+function applyQuickRange() {
+  var v = document.getElementById('qr').value;
+  if (!v || v === 'all') {
+    document.getElementById('from').value = '';
+    document.getElementById('to').value = '';
+    if (allData.length) applyFilters();
+    return;
+  }
+  var to = new Date(), fr = new Date();
+  fr.setDate(fr.getDate() - parseInt(v));
+  document.getElementById('to').value   = to.toISOString().split('T')[0];
+  document.getElementById('from').value = fr.toISOString().split('T')[0];
+  if (allData.length) applyFilters();
+}
+
+function doReset() {
+  document.getElementById('qr').value  = 'all';
+  document.getElementById('agg').value = 'monthly';
+  document.getElementById('fcol').value = '';
+  document.getElementById('fval').value = '';
+  document.getElementById('from').value = '';
+  document.getElementById('to').value   = '';
+  document.getElementById('afl').textContent = '';
+  ALL_SHEETS.forEach(function(s){ activeSheets[s.name] = true; });
+  buildSheetTabs(); applyFilters();
+}
+
+function aggregate(data) {
+  var agg = document.getElementById('agg').value;
+  if (agg === 'raw') return data;
+  var groups = {};
   data.forEach(function(row){
-    var ts=getTS(row),key;
-    if(agg==='monthly'){
-      var mo=(row['Month']||'').toString().trim();
-      if(mo&&mo.length>2){key=mo;}
-      else if(ts&&!isNaN(ts)){key=ts.getFullYear()+'-'+(ts.getMonth()+1).toString().padStart(2,'0');}
-      else return;
+    var ts = row._ts, key;
+    if (agg === 'monthly') {
+      // Group by sheet name (month) if available, else by YYYY-MM
+      key = row._source || (ts ? ts.getFullYear() + '-' + (ts.getMonth()+1).toString().padStart(2,'0') : 'unknown');
     } else {
-      if(!ts||isNaN(ts)) return;
-      key=ts.getFullYear()+'-'+(ts.getMonth()+1).toString().padStart(2,'0')+'-'+ts.getDate().toString().padStart(2,'0');
+      if (!ts) return;
+      key = ts.getFullYear() + '-' + (ts.getMonth()+1).toString().padStart(2,'0') + '-' + ts.getDate().toString().padStart(2,'0');
     }
-    if(!groups[key]) groups[key]=[];groups[key].push(row);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(row);
   });
-  return Object.keys(groups).sort().map(function(k){
-    var rows=groups[k],avg={Timestamp:k,_source:rows[0]._source,_month:k};
-    ALL_COLS.forEach(function(c){
-      var vals=rows.map(function(r){return num(r[c]);}).filter(function(v){return v!==null;});
-      avg[c]=vals.length?(vals.reduce(function(a,b){return a+b;},0)/vals.length).toFixed(2):null;
+
+  var monthOrder = { 'JAN':0,'FEB':1,'MARCH':2,'MAR':2,'APRIL':3,'APR':3,'MAY':4,'JUNE':5,'JUN':5,'JULY':6,'JUL':6,'AUG':7,'SEP':8,'OCT':9,'NOV':10,'DEC':11 };
+  var sortedKeys = Object.keys(groups).sort(function(a,b){
+    // Try to parse month names for ordering
+    var ay = a.match(/(\d{4})/), by2 = b.match(/(\d{4})/);
+    if (ay && by2 && ay[1] !== by2[1]) return parseInt(ay[1]) - parseInt(by2[1]);
+    var am = a.toUpperCase(), bm = b.toUpperCase();
+    var ai = -1, bi = -1;
+    Object.keys(monthOrder).forEach(function(k){ if (am.includes(k)) ai = monthOrder[k]; if (bm.includes(k)) bi = monthOrder[k]; });
+    if (ai >= 0 && bi >= 0) return ai - bi;
+    return a < b ? -1 : 1;
+  });
+
+  return sortedKeys.map(function(k){
+    var rows = groups[k];
+    var avgRow = { _source: rows[0]._source, _ts: rows[0]._ts, _label: k };
+    SENSOR_DEFS.forEach(function(sd){
+      var vals = rows.map(function(r){ return num(r[sd.key]); }).filter(function(v){ return v !== null; });
+      avgRow[sd.key] = vals.length ? (vals.reduce(function(a,b){ return a+b; },0) / vals.length) : null;
     });
-    return avg;
+    return avgRow;
   });
 }
 
-// ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // CHARTS
-// ══════════════════════════════════════════════════
-function renderAll(data){
-  var labels=data.map(function(r){var ts=getTS(r);return(ts&&!isNaN(ts))?fmtTS(ts):String(r.Timestamp||r._month||'');});
-  function ds(col,color,yAxis){return{label:col,data:data.map(function(r){return num(r[col]);}),
-    borderColor:color,backgroundColor:color+'22',borderWidth:1.8,pointRadius:2,tension:0.3,yAxisID:yAxis};}
-  var xS={ticks:{color:'#999',maxTicksLimit:12},grid:{color:'#eee'}};
-  var yL={type:'linear',position:'left', ticks:{color:'#999'},grid:{color:'#eee'}};
-  var yR={type:'linear',position:'right',ticks:{color:'#999'},grid:{drawOnChartArea:false}};
-  function bOpts(sc){return{responsive:true,maintainAspectRatio:true,animation:false,
-    plugins:{legend:{labels:{color:'#555',font:{size:10}}}},scales:sc};}
+// ═══════════════════════════════════════════════════════════════
+function renderAll(data) {
+  var labels = data.map(function(r){
+    if (r._label) return r._label;
+    var ts = r._ts; return (ts && !isNaN(ts)) ? fmtTS(ts) : String(r._source||'');
+  });
 
-  var showU1=(currentUnit==='U1'||currentUnit==='BOTH'),showU2=(currentUnit==='U2'||currentUnit==='BOTH');
-
-  document.querySelector('#flowU1Chart').closest('.cbox').style.display=showU1?'':'none';
-  if(flowU1Chart) flowU1Chart.destroy();
-  if(showU1){
-    var f1=[];
-    if(activeParams['U1-AUTOCONER FLOW - Flow'])   f1.push(ds('U1-AUTOCONER FLOW - Flow',   '#4f8ef7','y'));
-    if(activeParams['U1-PREPARATORY FLOW - Flow'])  f1.push(ds('U1-PREPARATORY FLOW - Flow', '#3b82f6','y'));
-    if(activeParams['U1-SPINNING FLOW - Flow'])     f1.push(ds('U1-SPINNING FLOW - Flow',    '#06b6d4','y1'));
-    if(activeParams['U1-SPG 1 TO 34 - Flow'])      f1.push(ds('U1-SPG 1 TO 34 - Flow',     '#0ea5e9','y1'));
-    flowU1Chart=new Chart(document.getElementById('flowU1Chart'),{type:'line',data:{labels:labels,datasets:f1},options:bOpts({y:yL,y1:yR,x:xS})});
+  function ds(key, color, yAxis) {
+    var sd = SENSOR_DEFS.find(function(s){ return s.key === key; });
+    return {
+      label: sd ? sd.label : key,
+      data: data.map(function(r){ return num(r[key]); }),
+      borderColor: color, backgroundColor: color+'22',
+      borderWidth: 1.8, pointRadius: 2, tension: 0.3, yAxisID: yAxis
+    };
   }
 
-  document.querySelector('#flowU2Chart').closest('.cbox').style.display=showU2?'':'none';
-  if(flowU2Chart) flowU2Chart.destroy();
-  if(showU2){
-    var f2=[];
-    if(activeParams['U2-AUTOCONER FLOW - Flow'])     f2.push(ds('U2-AUTOCONER FLOW - Flow',    '#a855f7','y'));
-    if(activeParams['U2-BLOWROOM & CARDING - Flow']) f2.push(ds('U2-BLOWROOM & CARDING - Flow','#9333ea','y'));
-    if(activeParams['U2-MAIN HEADER - Flow'])        f2.push(ds('U2-MAIN HEADER - Flow',       '#7c3aed','y1'));
-    if(activeParams['U2-SPINNING - Flow'])           f2.push(ds('U2-SPINNING - Flow',          '#c084fc','y1'));
-    if(activeParams['U2-PREPARATORY - Flow'])        f2.push(ds('U2-PREPARATORY - Flow',       '#d946ef','y1'));
-    flowU2Chart=new Chart(document.getElementById('flowU2Chart'),{type:'line',data:{labels:labels,datasets:f2},options:bOpts({y:yL,y1:yR,x:xS})});
+  var xS = { ticks:{ color:'#999', maxTicksLimit:12 }, grid:{ color:'#eee' } };
+  var yL  = { type:'linear', position:'left',  ticks:{ color:'#999' }, grid:{ color:'#eee' } };
+  var yR  = { type:'linear', position:'right', ticks:{ color:'#999' }, grid:{ drawOnChartArea:false } };
+  function bOpts(sc){ return { responsive:true, maintainAspectRatio:true, animation:false,
+    plugins:{ legend:{ labels:{ color:'#555', font:{ size:10 } } } }, scales:sc }; }
+
+  var showU1 = (currentUnit === 'U1' || currentUnit === 'BOTH');
+  var showU2 = (currentUnit === 'U2' || currentUnit === 'BOTH');
+
+  document.getElementById('boxU1').style.display = showU1 ? '' : 'none';
+  if (flowU1Chart) { flowU1Chart.destroy(); flowU1Chart = null; }
+  if (showU1) {
+    var f1 = [];
+    if (activeParams['U1_AUTOCONER_FLOW'])   f1.push(ds('U1_AUTOCONER_FLOW',   '#4f8ef7','y'));
+    if (activeParams['U1_PREPARATORY_FLOW']) f1.push(ds('U1_PREPARATORY_FLOW', '#3b82f6','y'));
+    if (activeParams['U1_SPINNING_FLOW'])    f1.push(ds('U1_SPINNING_FLOW',    '#06b6d4','y1'));
+    if (activeParams['U1_SPG_1_TO_34'])      f1.push(ds('U1_SPG_1_TO_34',     '#0ea5e9','y1'));
+    flowU1Chart = new Chart(document.getElementById('flowU1Chart'),
+      { type:'line', data:{ labels:labels, datasets:f1 }, options:bOpts({ y:yL, y1:yR, x:xS }) });
   }
 
-  if(pressChart) pressChart.destroy();
-  var ps=[];
-  if(showU1&&activeParams['U1-AFTER DRYER PRESSURE - Pressure']) ps.push(ds('U1-AFTER DRYER PRESSURE - Pressure','#6366f1','y'));
-  if(showU2&&activeParams['U2-AFTER DRYER PRESSURE - Pressure']) ps.push(ds('U2-AFTER DRYER PRESSURE - Pressure','#10b981','y1'));
-  pressChart=new Chart(document.getElementById('pressChart'),{type:'line',data:{labels:labels,datasets:ps},options:bOpts({y:yL,y1:yR,x:xS})});
+  document.getElementById('boxU2').style.display = showU2 ? '' : 'none';
+  if (flowU2Chart) { flowU2Chart.destroy(); flowU2Chart = null; }
+  if (showU2) {
+    var f2 = [];
+    if (activeParams['U2_AUTOCONER_FLOW'])  f2.push(ds('U2_AUTOCONER_FLOW',  '#a855f7','y'));
+    if (activeParams['U2_BLOWROOM_CARDING'])f2.push(ds('U2_BLOWROOM_CARDING','#9333ea','y'));
+    if (activeParams['U2_MAIN_HEADER'])     f2.push(ds('U2_MAIN_HEADER',     '#7c3aed','y1'));
+    if (activeParams['U2_SPINNING'])        f2.push(ds('U2_SPINNING',        '#c084fc','y1'));
+    if (activeParams['U2_PREPARATORY'])     f2.push(ds('U2_PREPARATORY',     '#d946ef','y1'));
+    flowU2Chart = new Chart(document.getElementById('flowU2Chart'),
+      { type:'line', data:{ labels:labels, datasets:f2 }, options:bOpts({ y:yL, y1:yR, x:xS }) });
+  }
 
-  if(dewChart) dewChart.destroy();
-  var dw=[];
-  if(showU1&&activeParams['U1-DEW POINT - Dew Point'])   dw.push(ds('U1-DEW POINT - Dew Point',  '#22d3ee','y'));
-  if(showU2&&activeParams['U2 - DEW POINT - Dew Point']) dw.push(ds('U2 - DEW POINT - Dew Point','#14b8a6','y1'));
-  dewChart=new Chart(document.getElementById('dewChart'),{type:'line',data:{labels:labels,datasets:dw},options:bOpts({y:yL,y1:yR,x:xS})});
+  if (pressChart) { pressChart.destroy(); pressChart = null; }
+  var ps = [];
+  if (showU1 && activeParams['U1_AFTER_DRYER_PRESSURE']) ps.push(ds('U1_AFTER_DRYER_PRESSURE','#6366f1','y'));
+  if (showU2 && activeParams['U2_AFTER_DRYER_PRESSURE']) ps.push(ds('U2_AFTER_DRYER_PRESSURE','#10b981','y1'));
+  pressChart = new Chart(document.getElementById('pressChart'),
+    { type:'line', data:{ labels:labels, datasets:ps }, options:bOpts({ y:yL, y1:yR, x:xS }) });
 
-  if(powChart) powChart.destroy();
-  var pw=[];
-  if(showU1&&activeParams['U1-COMP 1 POWER - Power']) pw.push(ds('U1-COMP 1 POWER - Power','#ef4444','y'));
-  if(showU1&&activeParams['U1-COMP 2 POWER - Power']) pw.push(ds('U1-COMP 2 POWER - Power','#f97316','y'));
-  if(showU2&&activeParams['U2-COMP POWER - Power'])   pw.push(ds('U2-COMP POWER - Power',  '#ec4899','y1'));
-  powChart=new Chart(document.getElementById('powChart'),{type:'line',data:{labels:labels,datasets:pw},options:bOpts({y:yL,y1:yR,x:xS})});
+  if (dewChart) { dewChart.destroy(); dewChart = null; }
+  var dw = [];
+  if (showU1 && activeParams['U1_DEW_POINT']) dw.push(ds('U1_DEW_POINT','#22d3ee','y'));
+  if (showU2 && activeParams['U2_DEW_POINT']) dw.push(ds('U2_DEW_POINT','#14b8a6','y1'));
+  dewChart = new Chart(document.getElementById('dewChart'),
+    { type:'line', data:{ labels:labels, datasets:dw }, options:bOpts({ y:yL, y1:yR, x:xS }) });
+
+  if (powChart) { powChart.destroy(); powChart = null; }
+  var pw = [];
+  if (showU1 && activeParams['U1_COMP1_POWER']) pw.push(ds('U1_COMP1_POWER','#ef4444','y'));
+  if (showU1 && activeParams['U1_COMP2_POWER']) pw.push(ds('U1_COMP2_POWER','#f97316','y'));
+  if (showU2 && activeParams['U2_COMP_POWER'])  pw.push(ds('U2_COMP_POWER', '#ec4899','y1'));
+  powChart = new Chart(document.getElementById('powChart'),
+    { type:'line', data:{ labels:labels, datasets:pw }, options:bOpts({ y:yL, y1:yR, x:xS }) });
 }
 
-// ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // TABLE
-// ══════════════════════════════════════════════════
-function renderTable(data){
-  var vc=(currentUnit==='U1')?U1_COLS:(currentUnit==='U2')?U2_COLS:ALL_COLS;
-  var show=data.slice(0,300);
-  document.getElementById('ttitle').textContent='Data (showing '+show.length+' of '+data.length+' records)';
-  var html='<table><tr><th>Month/Source</th><th>Timestamp</th>'+vc.map(function(c){return'<th>'+c+'</th>';}).join('')+'</tr>';
+// ═══════════════════════════════════════════════════════════════
+function renderTable(data) {
+  var sensors = SENSOR_DEFS.filter(function(sd){
+    return currentUnit === 'BOTH' || sd.group === currentUnit;
+  });
+  var show = data.slice(0, 300);
+  document.getElementById('ttitle').textContent =
+    'Data (showing ' + show.length + ' of ' + data.length + ' records)';
+
+  var html = '<table><tr><th>Month</th><th>Timestamp</th>' +
+    sensors.map(function(sd){ return '<th>' + sd.label + ' (' + sd.unit + ')</th>'; }).join('') + '</tr>';
+
   show.forEach(function(row){
-    var src=row._source||row['Month']||'';
-    html+='<tr><td><span class="badge '+badgeClass(src)+'">'+src+'</span></td><td>'+fmtTS(row['Timestamp'])+'</td>';
-    html+=vc.map(function(c){var v=row[c];return'<td>'+(v!=null&&v!==''?v:'—')+'</td>';}).join('');
-    html+='</tr>';
+    var src = row._source || '';
+    html += '<tr><td><span class="badge ' + badgeClass(src) + '">' + src + '</span></td>';
+    html += '<td>' + fmtTS(row._ts) + '</td>';
+    html += sensors.map(function(sd){
+      var v = row[sd.key];
+      return '<td>' + (v !== null && v !== undefined ? (typeof v === 'number' ? v.toFixed(3) : v) : '—') + '</td>';
+    }).join('');
+    html += '</tr>';
   });
-  document.getElementById('table').innerHTML=html+'</table>';
+  document.getElementById('table').innerHTML = html + '</table>';
 }
 
-function doExport(){
-  var data=aggregate(filteredData),cols=['Timestamp','_source'].concat(ALL_COLS);
-  var csv=cols.join(',')+'\n';
+function doExport() {
+  var data = aggregate(filteredData);
+  var sensors = SENSOR_DEFS;
+  var header = ['Month', 'Timestamp'].concat(sensors.map(function(sd){ return sd.label; }));
+  var csv = header.join(',') + '\n';
   data.forEach(function(row){
-    csv+=cols.map(function(c){var v=c==='Timestamp'?fmtTS(row[c]):(row[c]!=null?row[c]:'');return'"'+String(v).replace(/"/g,'""')+'"';}).join(',')+'\n';
+    var line = [
+      '"' + (row._source||'') + '"',
+      '"' + fmtTS(row._ts) + '"'
+    ].concat(sensors.map(function(sd){
+      var v = row[sd.key];
+      return v !== null && v !== undefined ? String(v) : '';
+    }));
+    csv += line.join(',') + '\n';
   });
-  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='vb_yarn_data.csv';a.click();
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'vb_yarn_data.csv';
+  a.click();
 }
 
-// ══════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // INIT
-// ══════════════════════════════════════════════════
-buildSheetTabs();buildCards();buildParamButtons();doFetch();
+// ═══════════════════════════════════════════════════════════════
+buildSheetTabs(); buildCards(); buildParamButtons(); doFetch();
 </script>
 </body>
 </html>
