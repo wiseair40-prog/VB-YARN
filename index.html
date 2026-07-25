@@ -418,7 +418,8 @@ function fetchSheet(sheet) {
     });
 }
 
-function doFetch() {
+var _fetchGen=0;
+function doFetch() { var _gen=++_fetchGen;
   var sy=document.getElementById('sync');
   sy.textContent='\u25CF Fetching...'; sy.style.color='#f59e0b';
   document.getElementById('fixBanner').style.display='none';
@@ -451,7 +452,7 @@ function doFetch() {
         if(fill) fill.style.width=Math.round(done/total*100)+'%';
         return res;
       });
-  })).then(function(results){
+  })).then(function(results){ if(_gen!==_fetchGen) return;
     var byTs={};
     results.forEach(function(res){
       res.data.forEach(function(p){
